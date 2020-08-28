@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Execution times are based on an environment with 16 cores and 64 Gb RAM.
+
 #---------------------------------------------------------#
 
 #Set the TMPDIR variable.
