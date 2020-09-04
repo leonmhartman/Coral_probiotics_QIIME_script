@@ -1,13 +1,6 @@
 #!/bin/sh
 
-# Execution times are based on an environment with 16 cores and 64 Gb RAM.
-
-#---------------------------------------------------------#
-
-#Set the TMPDIR variable.
-rm -r /mnt/readwrite
-mkdir /mnt/readwrite
-export TMPDIR='/mnt/readwrite'
+# Execution times are based on HPC-hosted Linux environment with 16 cores and 64 Gb RAM.
 
 #---------------------------------------------------------#
 
@@ -36,6 +29,7 @@ qiime cutadapt trim-paired \
 --verbose
 
 #Rename output file.
+
 mv /mnt/run1/seqs/trimmed_sequences.qza /mnt/run1/seqs/trimmed1.qza
 
 #---------------------------------------------------------#
@@ -54,7 +48,6 @@ qiime demux summarize \
 
 #Use dada2 for denoising, chimera checking, trimming, dereplication and to generate a feature table.
 #Execution time: 1.5 hours
-rm -r /mnt/run1/seqs/dada2out
 
 qiime dada2 denoise-paired \
 --i-demultiplexed-seqs /mnt/run1/seqs/trimmed1.qza \
@@ -67,6 +60,7 @@ qiime dada2 denoise-paired \
 --verbose
 
 #Give the output files more recognisable names.
+
 mv /mnt/run1/seqs/dada2out/table.qza /mnt/run1/seqs/dada2out/run1_table.qza
 mv /mnt/run1/seqs/dada2out/representative_sequences.qza /mnt/run1/seqs/dada2out/run1_rep_seqs.qza
 mv /mnt/run1/seqs/dada2out/denoising_stats.qza /mnt/run1/seqs/dada2out/run1_denoising_stats.qza
@@ -74,9 +68,6 @@ mv /mnt/run1/seqs/dada2out/denoising_stats.qza /mnt/run1/seqs/dada2out/run1_deno
 #---------------------------------------------------------#
 
 #Generate summary files to check whether processing has worked okay.
-rm /mnt/run1/seqs/dada2out/run1_table.qzv
-rm /mnt/run1/seqs/dada2out/run1_rep_seqs.qzv
-rm /mnt/run1/seqs/dada2out/run1_denoising_stats.qzv
 
 qiime feature-table summarize \
 --i-table /mnt/run1/seqs/dada2out/run1_table.qza \
@@ -139,10 +130,10 @@ qiime demux summarize \
 
 #Use dada2 for denoising, chimera checking, trimming, dereplication and to generate a feature table.
 #Execution time: 1.5 hours
-rm -r /mnt/run2/seqs/dada2out
+
 mkdir /mnt/run2/seqs/dada2out
 
-nohup qiime dada2 denoise-paired \
+qiime dada2 denoise-paired \
 --i-demultiplexed-seqs /mnt/run2/seqs/trimmed2.qza \
 --p-trunc-len-f 258 \
 --p-trunc-len-r 140 \
@@ -152,14 +143,11 @@ nohup qiime dada2 denoise-paired \
 --o-table /mnt/run2/seqs/dada2out/run2_table.qza \
 --o-representative-sequences /mnt/run2/seqs/dada2out/run2_rep_seqs.qza \
 --o-denoising-stats /mnt/run2/seqs/dada2out/run2_denoising_stats.qza \
---verbose &
+--verbose
 
 #---------------------------------------------------------#
 
 #Generate summary files to check whether processing has worked okay.
-rm /mnt/run2/seqs/dada2out/run2_table.qzv
-rm /mnt/run2/seqs/dada2out/run2_rep_seqs.qzv
-rm /mnt/run2/seqs/dada2out/run2_denoising_stats.qzv
 
 qiime feature-table summarize \
 --i-table /mnt/run2/seqs/dada2out/run2_table.qza \
@@ -203,7 +191,8 @@ qiime feature-table tabulate-seqs \
 #---------------------------------------------------------#
 
 # Assign taxonomy
-#Execution time: 1 hour
+# Execution time: 1 hour
+
 qiime feature-classifier classify-sklearn \
 --i-classifier /mnt/SILVA_132_v5v6/silva_132_16s_v5v6_classifier.qza \
 --i-reads /mnt/allruns_rep_seqs.qza \
@@ -224,7 +213,7 @@ qiime metadata tabulate \
 
 #---------------------------------------------------------#
 
-#Filter out mitochondria, chloroplasts, and any features not taxonomically identified to at least the phylum level.
+# Filter out mitochondria, chloroplasts, and any features not taxonomically identified to at least the phylum level.
 
 qiime taxa filter-table \
 --i-table /mnt/allruns_table.qza \
@@ -240,6 +229,7 @@ qiime taxa filter-table \
 # Create phylogenetic tree
 
 #Perform an alignment on the representative sequences.
+
 mkdir /mnt/16s/seqs/aligntree
 
 qiime alignment mafft \
@@ -250,8 +240,7 @@ qiime alignment mafft \
 
 #--------------------------------------------------#
 
-#Mask/filter highly variable regions of the alignment.
-rm /mnt/16s/seqs/aligntree/masked_aligned_16s_rep_seqs.qza
+# Mask/filter highly variable regions of the alignment.
 
 qiime alignment mask \
 --i-alignment /mnt/16s/seqs/aligntree/aligned_16s_rep_seqs.qza \
@@ -262,7 +251,6 @@ qiime alignment mask \
 
 #Generate a phylogenetic tree.
 #Use single thread (which is the default action) so that identical results can be produced if rerun.
-rm /mnt/16s/seqs/aligntree/16s_unrooted_tree.qza
 
 qiime phylogeny fasttree \
 --i-alignment /mnt/16s/seqs/aligntree/masked_aligned_16s_rep_seqs.qza \
@@ -270,11 +258,9 @@ qiime phylogeny fasttree \
 --o-tree /mnt/16s/seqs/aligntree/16s_unrooted_tree.qza \
 --verbose
 
-
 #--------------------------------------------------#
 
-#Apply mid-point rooting to the tree.
-rm /mnt/16s/seqs/aligntree/16s_rooted_tree.qza
+# Apply mid-point rooting to the tree.
 
 qiime phylogeny midpoint-root \
 --i-tree /mnt/16s/seqs/aligntree/16s_unrooted_tree.qza \
